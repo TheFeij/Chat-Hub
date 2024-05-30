@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"Chat-Server/repository/db/sql"
 	"Chat-Server/repository/io"
 )
 
@@ -12,14 +11,4 @@ type Repository interface {
 
 	// GetAllMessages retrieves all messages from the database
 	GetAllMessages() ([]io.Message, error)
-}
-
-// NewRepository returns a new repository with the given type
-func NewRepository(databaseType DatabaseType) Repository {
-	switch databaseType {
-	case Postgres:
-		return sql.NewPostgresRepository()
-	}
-
-	return nil
 }
