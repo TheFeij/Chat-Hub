@@ -6,7 +6,7 @@ import "Chat-Server/repository/db/postgres"
 func NewRepository(databaseType DatabaseType) Repository {
 	switch databaseType {
 	case Postgres:
-		return postgres.NewPostgresRepository()
+		return postgres.GetPostgresRepository()
 	}
 
 	return nil

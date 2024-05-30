@@ -24,8 +24,8 @@ var postgresRepository PostgresRepository
 // once is used to ensure the singleton instance is initialize once
 var once sync.Once
 
-// NewPostgresRepository returns a new PostgresRepository
-func NewPostgresRepository() *PostgresRepository {
+// GetPostgresRepository returns a new PostgresRepository
+func GetPostgresRepository() *PostgresRepository {
 	once.Do(func() {
 		// get configurations
 		configurations := config.GetConfig("config", "json", "./config")
