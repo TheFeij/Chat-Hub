@@ -3,6 +3,7 @@ package postgres
 import (
 	"Chat-Server/config"
 	"Chat-Server/repository/db/postgres/models"
+	"Chat-Server/repository/io"
 	"fmt"
 	driver "gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -48,4 +49,18 @@ func NewPostgresRepository() *PostgresRepository {
 	return &postgresRepository
 }
 
-// TODO implement methods of the Repository interface
+// AddMessage saves the input message to the postgres database
+func (p *PostgresRepository) AddMessage(message *io.Message) (*io.Message, error) {
+	// initialize a message model
+	newMessage := models.Message{
+		Text:   message.Text,
+		Author: message.Author,
+	}
+
+	// save the message to the database
+	if err := p.db.Create(&newMessage).Error; err != nil {
+		return nil, err
+	}
+
+	return message, nil
+}
