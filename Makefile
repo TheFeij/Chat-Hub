@@ -5,13 +5,13 @@ create-db:
 	docker exec -it postgres-container createdb --username=root --owner=root chat_server
 
 drop-db:
-	docker exec -it postgres-container dropdb --username=root --owner=root chat_server
+	docker exec -it postgres-container dropdb chat_server
 
 create-test-db:
 	docker exec -it postgres-container createdb --username=root --owner=root chat_server_test
 
 drop-test-db:
-	docker exec -it postgres-container dropdb --username=root --owner=root chat_server_test
+	docker exec -it postgres-container dropdb chat_server_test
 
 start-server:
 	go run ./main.go
