@@ -12,6 +12,21 @@ type config struct {
 	serverAddress       string // address of the server
 }
 
+// DatabaseAddress returns database address
+func (c config) DatabaseAddress() string {
+	return c.databaseAddress
+}
+
+// TestDatabaseAddress returns test database address
+func (c config) TestDatabaseAddress() string {
+	return c.testDatabaseAddress
+}
+
+// ServerAddress returns server address
+func (c config) ServerAddress() string {
+	return c.serverAddress
+}
+
 // GetConfig returns a config object loaded with the config variables of the
 // file specified in the input
 func GetConfig(configFileName, configFileType, configFilePath string) *config {
