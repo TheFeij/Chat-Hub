@@ -1,7 +1,9 @@
 package repository
 
-// DatabaseType represents all supported databases
-// this type is used as an input for the NewRepository() factory function
-type DatabaseType string
-
-const Postgres DatabaseType = "postgres"
+// The Message represents a repository message
+type Message struct {
+	// Text of the message
+	Text string
+	// Author of the message (username of the person who sent the message)
+	Author string
+}
