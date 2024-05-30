@@ -3,6 +3,7 @@ package api
 import (
 	"Chat-Server/repository"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 // server represents a server
@@ -20,8 +21,22 @@ func NewServer() *server {
 	repository := repository.NewRepository(repository.Postgres)
 
 	// create and return a server
-	return &server{
+	apiServer := server{
 		repository: repository,
 		router:     router,
 	}
+
+	// add route handlers
+	apiServer.addRouteHandlers()
+
+	return &apiServer
+}
+
+// addRouteHandlers adds route handlers to server's router
+func (s *server) addRouteHandlers() {
+	s.router.GET("/", func(context *gin.Context) {
+		context.String(http.StatusOK, "Welcome!")
+	})
+
+	// TODO: add other route handlers
 }
