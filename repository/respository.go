@@ -1,6 +1,8 @@
 package repository
 
-import "Chat-Server/repository/sql"
+import (
+	"Chat-Server/repository/db/sql"
+)
 
 // Repository implements the required methods for the business layer to interact with the data layer
 type Repository interface {
