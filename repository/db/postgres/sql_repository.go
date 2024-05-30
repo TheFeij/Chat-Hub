@@ -1,9 +1,8 @@
 package postgres
 
 import (
-	"Chat-Server/config"
+	"Chat-Server/repository"
 	"Chat-Server/repository/db/postgres/models"
-	"Chat-Server/repository/io"
 	"fmt"
 	driver "gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -25,13 +24,10 @@ var postgresRepository PostgresRepository
 var once sync.Once
 
 // GetPostgresRepository returns a new PostgresRepository
-func GetPostgresRepository() *PostgresRepository {
+func GetPostgresRepository(address string) *PostgresRepository {
 	once.Do(func() {
-		// get configurations
-		configurations := config.GetConfig("config", "json", "./config")
-
 		// get a db session
-		db, err := gorm.Open(driver.Open(configurations.DatabaseAddress()))
+		db, err := gorm.Open(driver.Open(address))
 		if err != nil {
 			panic(fmt.Errorf("cannot connect to database"))
 		}
@@ -50,7 +46,7 @@ func GetPostgresRepository() *PostgresRepository {
 }
 
 // AddMessage saves the input message to the postgres database
-func (p *PostgresRepository) AddMessage(message *io.Message) (*io.Message, error) {
+func (p *PostgresRepository) AddMessage(message *repository.Message) (*repository.Message, error) {
 	// initialize a message model
 	newMessage := models.Message{
 		Text:   message.Text,
@@ -63,4 +59,13 @@ func (p *PostgresRepository) AddMessage(message *io.Message) (*io.Message, error
 	}
 
 	return message, nil
+}
+
+// GetAllMessages retrieves all messages from the database
+func (p *PostgresRepository) GetAllMessages() (messages []*repository.Message, err error) {
+	err = p.db.
+		Raw("SELECT * FROM messages ORDER BY messages.id ASC").
+		Scan(&messages).Error
+
+	return
 }
