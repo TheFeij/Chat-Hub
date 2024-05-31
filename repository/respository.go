@@ -7,4 +7,10 @@ type Repository interface {
 
 	// GetAllMessages retrieves all messages from the database
 	GetAllMessages() ([]*Message, error)
+
+	// AddUser adds a user to the data layer
+	AddUser(user *User) (*User, error)
+
+	// GetUser retrieves a user by username
+	GetUser(username string) (*User, error)
 }
