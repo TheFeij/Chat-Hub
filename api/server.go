@@ -1,7 +1,9 @@
 package api
 
 import (
+	"Chat-Server/config"
 	"Chat-Server/repository"
+	"Chat-Server/token"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -13,10 +15,12 @@ import (
 type server struct {
 	router     *gin.Engine
 	repository repository.Repository
+	tokenMaker token.Maker
+	configs    *config.Config
 }
 
 // NewServer initializes and returns a server
-func NewServer(repository repository.Repository) *server {
+func NewServer(repository repository.Repository, tokenMaker token.Maker, configs *config.Config) *server {
 	// get a gin router with default middlewares
 	router := gin.Default()
 
@@ -24,6 +28,8 @@ func NewServer(repository repository.Repository) *server {
 	apiServer := server{
 		repository: repository,
 		router:     router,
+		tokenMaker: tokenMaker,
+		configs:    configs,
 	}
 
 	// register custom validators
