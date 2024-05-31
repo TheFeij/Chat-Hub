@@ -69,3 +69,31 @@ func (p *PostgresRepository) GetAllMessages() (messages []*repository.Message, e
 
 	return
 }
+
+// AddUser saves the input user into the postgres database
+func (p *PostgresRepository) AddUser(user *repository.User) (*repository.User, error) {
+	newUser := models.User{
+		Username: user.Username,
+		Password: user.Password,
+	}
+
+	if err := p.db.Create(&newUser).Error; err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+// GetUser retrieves user by username from the postgres database
+func (p *PostgresRepository) GetUser(username string) (user *repository.User, err error) {
+	res := p.db.
+		Model(models.User{}).
+		Where("username = ?", username).
+		Scan(&user)
+
+	if res.RowsAffected == 0 {
+		err = gorm.ErrRecordNotFound
+	}
+
+	return
+}
