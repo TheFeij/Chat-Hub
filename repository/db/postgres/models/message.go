@@ -4,6 +4,6 @@ package models
 type Message struct {
 	ID     uint   `gorm:"column:id;primaryKey"`
 	Author string `gorm:"column:author;not null"`
-	Text   string `gorm:"column:text;max:1024;min=1;not null"`
+	Text   string `gorm:"column:text;not null"`
 	User   User   `gorm:"foreignKey:Author;references:Username"`
 }
