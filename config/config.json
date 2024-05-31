@@ -1,5 +1,0 @@
-{
-  "DATABASE_ADDRESS": "postgresql://root:1234@localhost:5432/chat_server?sslmode=disable",
-  "TEST_DATABASE_ADDRESS": "postgresql://root:1234@localhost:5432/chat_server_test?sslmode=disable",
-  "SERVER_ADDRESS": "0.0.0.0:8080"
-}
