@@ -13,7 +13,7 @@ type server struct {
 }
 
 // NewServer initializes and returns a server
-func NewServer() *server {
+func NewServer(repository repository.Repository) *server {
 	// get a gin router with default middlewares
 	router := gin.Default()
 
@@ -25,6 +25,9 @@ func NewServer() *server {
 		repository: repository,
 		router:     router,
 	}
+
+	// register custom validators
+	registerCustomValidators()
 
 	// add route handlers
 	apiServer.addRouteHandlers()
