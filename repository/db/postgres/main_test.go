@@ -15,7 +15,7 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
-	cleanupTestDatabase()
+	cleanupDatabase()
 
 	os.Exit(code)
 }

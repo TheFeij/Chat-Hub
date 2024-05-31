@@ -35,7 +35,7 @@ func addRandomUser(t *testing.T) *repository.User {
 
 // TestAddUser tests AddUser method of the PostgresRepository
 func TestPostgresRepository_AddUser(t *testing.T) {
-	defer cleanupTestDatabase()
+	defer cleanupDatabase()
 
 	var randomUser *repository.User
 
@@ -58,7 +58,7 @@ func TestPostgresRepository_AddUser(t *testing.T) {
 
 // TestAddUser tests GetUser method of the PostgresRepository
 func TestPostgresRepository_GetUser(t *testing.T) {
-	defer cleanupTestDatabase()
+	defer cleanupDatabase()
 
 	randomUser := addRandomUser(t)
 
@@ -100,7 +100,7 @@ func addRandomMessage(t *testing.T, author string) *repository.Message {
 
 // TestPostgresRepository_AddMessage tests AddMessage method of PostgresRepository
 func TestPostgresRepository_AddMessage(t *testing.T) {
-	defer cleanupTestDatabase()
+	defer cleanupDatabase()
 
 	randomUser := addRandomUser(t)
 
@@ -126,7 +126,7 @@ func TestPostgresRepository_AddMessage(t *testing.T) {
 
 // TestPostgresRepository_GetAllMessages tests GetAllMessages method of PostgresRepository
 func TestPostgresRepository_GetAllMessages(t *testing.T) {
-	defer cleanupTestDatabase()
+	defer cleanupDatabase()
 
 	// fill the test database with some random data
 	randomUser1 := addRandomUser(t)
