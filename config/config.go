@@ -3,13 +3,32 @@ package config
 import (
 	"fmt"
 	"github.com/spf13/viper"
+	"time"
 )
 
 // config holds configuration variables
 type config struct {
-	databaseAddress     string // address of the database
-	testDatabaseAddress string // address of the test database
-	serverAddress       string // address of the server
+	databaseAddress      string        // address of the database
+	testDatabaseAddress  string        // address of the test database
+	serverAddress        string        // address of the server
+	tokenSymmetricKey    string        // symmetric key of to make and verify tokens
+	accessTokenDuration  time.Duration // access token duration
+	refreshTokenDuration time.Duration // refresh token duration
+}
+
+// TokenSymmetricKey returns token symmetric key
+func (c config) TokenSymmetricKey() string {
+	return c.tokenSymmetricKey
+}
+
+// AccessTokenDuration returns access token duration
+func (c config) AccessTokenDuration() time.Duration {
+	return c.accessTokenDuration
+}
+
+// RefreshTokenDuration returns refresh token duration
+func (c config) RefreshTokenDuration() time.Duration {
+	return c.refreshTokenDuration
 }
 
 // DatabaseAddress returns database address
@@ -43,9 +62,20 @@ func GetConfig(configFileName, configFileType, configFilePath string) *config {
 	}
 
 	// load configuration into a config instance
+	accessTokenDuration, err := time.ParseDuration(viper.Get("ACCESS_TOKEN_DURATION").(string))
+	if err != nil {
+		panic(fmt.Errorf("unable to read config file: %w", err))
+	}
+	refreshTokenDuration, err := time.ParseDuration(viper.Get("REFRESH_TOKEN_DURATION").(string))
+	if err != nil {
+		panic(fmt.Errorf("unable to read config file: %w", err))
+	}
 	return &config{
-		databaseAddress:     viper.Get("DATABASE_ADDRESS").(string),
-		testDatabaseAddress: viper.Get("TEST_DATABASE_ADDRESS").(string),
-		serverAddress:       viper.Get("SERVER_ADDRESS").(string),
+		databaseAddress:      viper.Get("DATABASE_ADDRESS").(string),
+		testDatabaseAddress:  viper.Get("TEST_DATABASE_ADDRESS").(string),
+		serverAddress:        viper.Get("SERVER_ADDRESS").(string),
+		tokenSymmetricKey:    viper.Get("TOKEN_SYMMETRIC_KEY").(string),
+		accessTokenDuration:  accessTokenDuration,
+		refreshTokenDuration: refreshTokenDuration,
 	}
 }
