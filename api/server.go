@@ -47,7 +47,8 @@ func (s *server) addRouteHandlers() {
 		context.String(http.StatusOK, "Welcome!")
 	})
 
-	// TODO: add other route handlers
+	s.router.POST("/signup", s.signup)
+	s.router.POST("/login", s.login)
 }
 
 // registerCustomValidators registers custom validators to gin's binding package
