@@ -13,6 +13,13 @@ create-test-db:
 drop-test-db:
 	docker exec -it postgres-container dropdb chat_server_test
 
+mockdb:
+	mockgen -package mockdb -destination repository/mock/repository.go Chat-Server/repository Repository
+
+mockmaker:
+	mockgen -package mockmaker -destination token/mock/maker.go Chat-Server/token Maker
+
+
 start-server:
 	go run ./main.go
 
