@@ -3,6 +3,9 @@ package api
 import (
 	"Chat-Server/repository"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/go-playground/validator/v10"
+	"log"
 	"net/http"
 )
 
@@ -16,9 +19,6 @@ type server struct {
 func NewServer(repository repository.Repository) *server {
 	// get a gin router with default middlewares
 	router := gin.Default()
-
-	// get a repository to interact with a postgresql database
-	repository := repository.NewRepository(repository.Postgres)
 
 	// create and return a server
 	apiServer := server{
@@ -42,4 +42,16 @@ func (s *server) addRouteHandlers() {
 	})
 
 	// TODO: add other route handlers
+}
+
+// registerCustomValidators registers custom validators to gin's binding package
+func registerCustomValidators() {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		if err := v.RegisterValidation("validUsername", ValidUsername); err != nil {
+			log.Fatal("could not register validUsername validator")
+		}
+		if err := v.RegisterValidation("validPassword", ValidPassword); err != nil {
+			log.Fatal("could not register validPassword validator")
+		}
+	}
 }
