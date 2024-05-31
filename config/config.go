@@ -6,8 +6,8 @@ import (
 	"time"
 )
 
-// config holds configuration variables
-type config struct {
+// Config holds configuration variables
+type Config struct {
 	databaseAddress      string        // address of the database
 	testDatabaseAddress  string        // address of the test database
 	serverAddress        string        // address of the server
@@ -17,38 +17,38 @@ type config struct {
 }
 
 // TokenSymmetricKey returns token symmetric key
-func (c config) TokenSymmetricKey() string {
+func (c Config) TokenSymmetricKey() string {
 	return c.tokenSymmetricKey
 }
 
 // AccessTokenDuration returns access token duration
-func (c config) AccessTokenDuration() time.Duration {
+func (c Config) AccessTokenDuration() time.Duration {
 	return c.accessTokenDuration
 }
 
 // RefreshTokenDuration returns refresh token duration
-func (c config) RefreshTokenDuration() time.Duration {
+func (c Config) RefreshTokenDuration() time.Duration {
 	return c.refreshTokenDuration
 }
 
 // DatabaseAddress returns database address
-func (c config) DatabaseAddress() string {
+func (c Config) DatabaseAddress() string {
 	return c.databaseAddress
 }
 
 // TestDatabaseAddress returns test database address
-func (c config) TestDatabaseAddress() string {
+func (c Config) TestDatabaseAddress() string {
 	return c.testDatabaseAddress
 }
 
 // ServerAddress returns server address
-func (c config) ServerAddress() string {
+func (c Config) ServerAddress() string {
 	return c.serverAddress
 }
 
 // GetConfig returns a config object loaded with the config variables of the
 // file specified in the input
-func GetConfig(configFileName, configFileType, configFilePath string) *config {
+func GetConfig(configFileName, configFileType, configFilePath string) *Config {
 	viper.AddConfigPath(configFilePath)
 	viper.SetConfigName(configFileName)
 	viper.SetConfigType(configFileType)
@@ -70,7 +70,7 @@ func GetConfig(configFileName, configFileType, configFilePath string) *config {
 	if err != nil {
 		panic(fmt.Errorf("unable to read config file: %w", err))
 	}
-	return &config{
+	return &Config{
 		databaseAddress:      viper.Get("DATABASE_ADDRESS").(string),
 		testDatabaseAddress:  viper.Get("TEST_DATABASE_ADDRESS").(string),
 		serverAddress:        viper.Get("SERVER_ADDRESS").(string),
