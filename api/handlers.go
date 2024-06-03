@@ -131,14 +131,36 @@ func (s *server) login(context *gin.Context) {
 		return
 	}
 
-	response := LoginResponse{
-		Username:              user.Username,
-		AccessToken:           accessToken,
-		AccessTokenExpiresAt:  accessTokenPayload.ExpiredAt,
-		RefreshToken:          refreshToken,
-		RefreshTokenExpiresAt: refreshTokenPayload.ExpiredAt,
-	}
-	context.JSON(http.StatusOK, response)
+	// setting refresh token and access token in the cookies
+	http.SetCookie(context.Writer, &http.Cookie{
+		Name:     "refreshToken",
+		Value:    refreshToken,
+		Expires:  refreshTokenPayload.ExpiredAt,
+		Path:     "/api/refresh",
+		HttpOnly: true,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	http.SetCookie(context.Writer, &http.Cookie{
+		Name:     "accessToken",
+		Value:    accessToken,
+		Expires:  accessTokenPayload.ExpiredAt,
+		Path:     "/api/chat",
+		HttpOnly: true,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	http.SetCookie(context.Writer, &http.Cookie{
+		Name:     "username",
+		Value:    user.Username,
+		Expires:  accessTokenPayload.ExpiredAt,
+		Path:     "/chat",
+		HttpOnly: false,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	context.Status(http.StatusOK)
 }
 
 // errorResponse puts the error into a gin.H instance
