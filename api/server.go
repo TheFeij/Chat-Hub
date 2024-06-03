@@ -57,8 +57,10 @@ func (s *server) addRouteHandlers() {
 		context.String(http.StatusOK, "Welcome!")
 	})
 
-	s.router.POST("/signup", s.signup)
-	s.router.POST("/login", s.login)
+// Start starts server on the given address
+func (s *server) Start(address string) error {
+	go s.chatHub.RunChatHub(s.repository)
+	return s.router.Run(address)
 }
 
 // registerCustomValidators registers custom validators to gin's binding package
