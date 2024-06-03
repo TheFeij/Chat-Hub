@@ -1,8 +1,11 @@
 {
-  "DATABASE_ADDRESS": "DATABASE_ADDRESS",
-  "TEST_DATABASE_ADDRESS": "TEST_DATABASE_ADDRESS",
-  "SERVER_ADDRESS": "SERVER_ADDRESS",
-  "TOKEN_SYMMETRIC_KEY": "TOKEN_SYMMETRIC_KEY",
+  "DATABASE_ADDRESS": "postgresql://root:1234@localhost:5432/chat_server?sslmode=disable",
+  "TEST_DATABASE_ADDRESS": "postgresql://root:1234@localhost:5432/chat_server_test?sslmode=disable",
+  "SERVER_ADDRESS": "0.0.0.0:8080",
+  "TOKEN_SYMMETRIC_KEY": "e7ce60brh&of922bcdeab47385f328af",
   "ACCESS_TOKEN_DURATION": "15m",
-  "REFRESH_TOKEN_DURATION": "24h"
+  "REFRESH_TOKEN_DURATION": "24h",
+  "ACCESS_TOKEN_COOKIE_PATH": "/api/chat",
+  "REFRESH_TOKEN_COOKIE_PATH": "api/refresh",
+  "USERNAME_COOKIE_PATH": "/chat"
 }
