@@ -1,6 +1,7 @@
 package api
 
 import (
+	"Chat-Server/api/ws"
 	"Chat-Server/config"
 	"Chat-Server/repository"
 	"Chat-Server/token"
@@ -18,6 +19,7 @@ type server struct {
 	repository repository.Repository
 	tokenMaker token.Maker
 	configs    *config.Config
+	chatHub    *ws.Hub
 }
 
 // NewServer initializes and returns a server
@@ -40,6 +42,7 @@ func NewServer(repository repository.Repository, tokenMaker token.Maker, configs
 		router:     router,
 		tokenMaker: tokenMaker,
 		configs:    configs,
+		chatHub:    ws.NewHub(),
 	}
 
 	// register custom validators
