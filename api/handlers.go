@@ -2,7 +2,6 @@ package api
 
 import (
 	"Chat-Server/repository"
-	"Chat-Server/token"
 	"Chat-Server/util"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -168,4 +167,40 @@ func errorResponse(err error) gin.H {
 	return gin.H{
 		"error": err.Error(),
 	}
+}
+
+// refreshToken reads refresh token from the cookies, and if valid creates another access token for the client
+func (s *server) refreshToken(context *gin.Context) {
+	refreshToken, err := context.Cookie("refreshToken")
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	payload, err := s.tokenMaker.VerifyToken(refreshToken)
+	if err != nil {
+		context.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	newAccessToken, newAccessTokenPayload, err := s.tokenMaker.CreateToken(
+		payload.Username,
+		s.configs.AccessTokenDuration(),
+	)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	http.SetCookie(context.Writer, &http.Cookie{
+		Name:     "accessToken",
+		Value:    newAccessToken,
+		Expires:  newAccessTokenPayload.ExpiredAt,
+		Path:     "/chat",
+		HttpOnly: true,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	context.Status(http.StatusOK)
 }
