@@ -4,6 +4,7 @@ import (
 	"Chat-Server/config"
 	"Chat-Server/repository"
 	"Chat-Server/token"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
@@ -23,6 +24,15 @@ type server struct {
 func NewServer(repository repository.Repository, tokenMaker token.Maker, configs *config.Config) *server {
 	// get a gin router with default middlewares
 	router := gin.Default()
+
+	// CORS middleware configuration
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{"*"}
+	corsConfig.AllowMethods = []string{"GET", "POST", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type"}
+
+	// use the CORS middleware with the custom configuration
+	router.Use(cors.New(corsConfig))
 
 	// create and return a server
 	apiServer := server{
