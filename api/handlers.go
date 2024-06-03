@@ -198,7 +198,7 @@ func (s *server) refreshToken(context *gin.Context) {
 		Name:     "accessToken",
 		Value:    newAccessToken,
 		Expires:  newAccessTokenPayload.ExpiredAt,
-		Path:     "/chat",
+		Path:     "/api/chat",
 		HttpOnly: true,
 		//Secure:   true,
 		SameSite: http.SameSiteStrictMode,
