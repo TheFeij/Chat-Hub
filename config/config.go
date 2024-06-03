@@ -8,12 +8,30 @@ import (
 
 // Config holds configuration variables
 type Config struct {
-	databaseAddress      string        // address of the database
-	testDatabaseAddress  string        // address of the test database
-	serverAddress        string        // address of the server
-	tokenSymmetricKey    string        // symmetric key of to make and verify tokens
-	accessTokenDuration  time.Duration // access token duration
-	refreshTokenDuration time.Duration // refresh token duration
+	databaseAddress        string        // address of the database
+	testDatabaseAddress    string        // address of the test database
+	serverAddress          string        // address of the server
+	tokenSymmetricKey      string        // symmetric key of to make and verify tokens
+	accessTokenDuration    time.Duration // access token duration
+	refreshTokenDuration   time.Duration // refresh token duration
+	accessTokenCookiePath  string        // access token's cookie path
+	refreshTokenCookiePath string        // refresh token's cookie path
+	usernameCookiePath     string        // username's cookie path
+}
+
+// AccessTokenCookiePath returns the access token cookie path
+func (c Config) AccessTokenCookiePath() string {
+	return c.accessTokenCookiePath
+}
+
+// RefreshTokenCookiePath returns the refresh token cookie path
+func (c Config) RefreshTokenCookiePath() string {
+	return c.refreshTokenCookiePath
+}
+
+// UsernameCookiePath returns username cookie path
+func (c Config) UsernameCookiePath() string {
+	return c.usernameCookiePath
 }
 
 // TokenSymmetricKey returns token symmetric key
