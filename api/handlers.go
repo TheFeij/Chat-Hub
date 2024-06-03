@@ -1,7 +1,9 @@
 package api
 
 import (
+	"Chat-Server/api/ws"
 	"Chat-Server/repository"
+	"Chat-Server/token"
 	"Chat-Server/util"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -203,4 +205,26 @@ func (s *server) refreshToken(context *gin.Context) {
 	})
 
 	context.Status(http.StatusOK)
+}
+
+// chat is the handler for the "/api/chat" route, starts a websocket connection to enter the chat server
+func (s *server) chat(context *gin.Context) {
+	// get access token payload to get username of the client from it
+	accessTokenPayload := context.MustGet(authorizationPayloadKey).(*token.Payload)
+
+	// upgrade the connection to a websocket connection
+	conn, err := ws.Upgrader.Upgrade(context.Writer, context.Request, nil)
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer conn.Close()
+
+	// create a new client instance
+	client := ws.NewClient(s.chatHub, conn, make(chan ws.Message, 10), accessTokenPayload.Username)
+	client.Register()
+
+	// start writing and reading logics
+	go client.Write()
+	client.Read()
 }
