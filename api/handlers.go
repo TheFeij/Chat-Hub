@@ -2,6 +2,7 @@ package api
 
 import (
 	"Chat-Server/repository"
+	"Chat-Server/token"
 	"Chat-Server/util"
 	"errors"
 	"github.com/gin-gonic/gin"
@@ -58,14 +59,36 @@ func (s *server) signup(context *gin.Context) {
 		return
 	}
 
-	res := SignupResponse{
-		Username:              newUser.Username,
-		AccessToken:           accessToken,
-		AccessTokenExpiresAt:  accessTokenPayload.ExpiredAt,
-		RefreshToken:          refreshToken,
-		RefreshTokenExpiresAt: refreshTokenPayload.ExpiredAt,
-	}
-	context.JSON(http.StatusOK, res)
+	// setting refresh token and access token in the cookies
+	http.SetCookie(context.Writer, &http.Cookie{
+		Name:     "refreshToken",
+		Value:    refreshToken,
+		Expires:  refreshTokenPayload.ExpiredAt,
+		Path:     "/api/refresh",
+		HttpOnly: true,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	http.SetCookie(context.Writer, &http.Cookie{
+		Name:     "accessToken",
+		Value:    accessToken,
+		Expires:  accessTokenPayload.ExpiredAt,
+		Path:     "/api/chat",
+		HttpOnly: true,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+	http.SetCookie(context.Writer, &http.Cookie{
+		Name:     "username",
+		Value:    newUser.Username,
+		Expires:  accessTokenPayload.ExpiredAt,
+		Path:     "/api/chat",
+		HttpOnly: false,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
+
+	context.Status(http.StatusOK)
 }
 
 // login route handler
