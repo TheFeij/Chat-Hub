@@ -56,9 +56,23 @@ func NewServer(repository repository.Repository, tokenMaker token.Maker, configs
 
 // addRouteHandlers adds route handlers to server's router
 func (s *server) addRouteHandlers() {
-	s.router.GET("/", func(context *gin.Context) {
-		context.String(http.StatusOK, "Welcome!")
+	s.router.POST("/api/signup", s.signup)
+	s.router.POST("/api/login", s.login)
+	s.router.POST("/api/refresh", s.refreshToken)
+
+	// Set up static files using the Static method
+	s.router.Static("/signup", "./static/signup")
+	s.router.Static("/login", "./static/login")
+	s.router.Static("/chat", "./static/chat")
+
+	authGroup := s.router.Group("/", authMiddleware(s.tokenMaker))
+	authGroup.GET("/api/chat", authMiddleware(s.tokenMaker), s.chat)
+
+	// Handle requests that don't match any defined routes
+	s.router.NoRoute(func(c *gin.Context) {
+		c.Redirect(http.StatusPermanentRedirect, "/login")
 	})
+}
 
 // Start starts server on the given address
 func (s *server) Start(address string) error {
