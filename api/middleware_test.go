@@ -4,7 +4,6 @@ import (
 	"Chat-Server/token"
 	"Chat-Server/token/mock"
 	"Chat-Server/util"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
@@ -18,7 +17,6 @@ import (
 func addAuthorization(
 	t *testing.T,
 	tokenMaker token.Maker,
-	authorizationType string,
 	username string,
 	duration time.Duration,
 	request *http.Request,
@@ -28,8 +26,15 @@ func addAuthorization(
 	require.NotEmpty(t, payload)
 	require.NotEmpty(t, accessToken)
 
-	authorizationHeader := fmt.Sprintf("%s %s", authorizationType, accessToken)
-	request.Header.Set(authorizationHeaderKey, authorizationHeader)
+	request.AddCookie(&http.Cookie{
+		Name:     "accessToken",
+		Value:    accessToken,
+		Expires:  payload.ExpiredAt,
+		Path:     testConfigs.AccessTokenCookiePath(),
+		HttpOnly: true,
+		//Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	})
 
 	return accessToken, payload
 }
@@ -49,7 +54,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "OK",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				accessToken, accessTokenPayload = addAuthorization(t, tokenMaker, authorizationTypeBearer, util.RandomUsername(), time.Minute, request)
+				accessToken, accessTokenPayload = addAuthorization(t, tokenMaker, util.RandomUsername(), time.Minute, request)
 			},
 			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
 				tokenMaker.EXPECT().VerifyToken(accessToken).Times(1).Return(accessTokenPayload, nil)
@@ -59,7 +64,7 @@ func TestAuthMiddleware(t *testing.T) {
 			},
 		},
 		{
-			name: "NoAuthorization",
+			name: "AccessTokenNotProvided",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
 			},
 			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
@@ -69,22 +74,12 @@ func TestAuthMiddleware(t *testing.T) {
 			},
 		},
 		{
-			name: "UnSupportedAuthorization",
+			name: "InvalidToken",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, tokenMaker, "unsupported", util.RandomUsername(), time.Minute, request)
+				addAuthorization(t, tokenMaker, util.RandomUsername(), -time.Minute, request)
 			},
 			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
-			},
-			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
-				require.Equal(t, http.StatusUnauthorized, recorder.Code)
-			},
-		},
-		{
-			name: "InvalidAuthorizationFormat",
-			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, tokenMaker, "", util.RandomUsername(), time.Minute, request)
-			},
-			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
+				tokenMaker.EXPECT().VerifyToken(accessToken).Times(1).Return(nil, token.ErrInvalidToken)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusUnauthorized, recorder.Code)
@@ -93,7 +88,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "ExpiredToken",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				accessToken, accessTokenPayload = addAuthorization(t, tokenMaker, authorizationTypeBearer, util.RandomUsername(), -time.Minute, request)
+				accessToken, accessTokenPayload = addAuthorization(t, tokenMaker, util.RandomUsername(), -time.Minute, request)
 			},
 			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
 				tokenMaker.EXPECT().VerifyToken(accessToken).Times(1).Return(nil, token.ErrExpiredToken)
