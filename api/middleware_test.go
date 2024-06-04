@@ -76,7 +76,7 @@ func TestAuthMiddleware(t *testing.T) {
 		{
 			name: "InvalidToken",
 			setupAuth: func(t *testing.T, request *http.Request, tokenMaker token.Maker) {
-				addAuthorization(t, tokenMaker, util.RandomUsername(), -time.Minute, request)
+				accessToken, accessTokenPayload = addAuthorization(t, tokenMaker, util.RandomUsername(), -time.Minute, request)
 			},
 			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
 				tokenMaker.EXPECT().VerifyToken(accessToken).Times(1).Return(nil, token.ErrInvalidToken)

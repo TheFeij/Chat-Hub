@@ -15,7 +15,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/mock/gomock"
 	"gorm.io/gorm"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -94,7 +93,8 @@ func TestSignup(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, tokenMaker token.Maker) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchLogin(t, recorder.Body, randomUser, testConfigs.TokenSymmetricKey(), refreshToken, accessToken)
+
+				checkLoginResponse(t, randomUser.Username, accessToken, refreshToken, recorder)
 			},
 		},
 		{
@@ -225,7 +225,7 @@ func TestSignup(t *testing.T) {
 			jsonReq, err := json.Marshal(&testCase.req)
 			require.NoError(t, err)
 
-			httpReq, err := http.NewRequest(http.MethodPost, "/signup", bytes.NewBuffer(jsonReq))
+			httpReq, err := http.NewRequest(http.MethodPost, "/api/signup", bytes.NewBuffer(jsonReq))
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
@@ -283,7 +283,8 @@ func TestLogin(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder, tokenMaker token.Maker) {
 				require.Equal(t, http.StatusOK, recorder.Code)
-				requireBodyMatchLogin(t, recorder.Body, randomUser, testConfigs.TokenSymmetricKey(), refreshToken, accessToken)
+
+				checkLoginResponse(t, randomUser.Username, accessToken, refreshToken, recorder)
 			},
 		},
 		{
@@ -434,7 +435,7 @@ func TestLogin(t *testing.T) {
 			jsonReq, err := json.Marshal(&testCase.req)
 			require.NoError(t, err)
 
-			httpReq, err := http.NewRequest(http.MethodPost, "/login", bytes.NewBuffer(jsonReq))
+			httpReq, err := http.NewRequest(http.MethodPost, "/api/login", bytes.NewBuffer(jsonReq))
 			require.NoError(t, err)
 
 			recorder := httptest.NewRecorder()
@@ -477,39 +478,17 @@ func createToken(t *testing.T, username string, duration time.Duration, tokenSym
 	return accessToken, payload
 }
 
-// requireBodyMatchLogin checks login response body
-func requireBodyMatchLogin(
-	t *testing.T,
-	body *bytes.Buffer,
-	user *repository.User,
-	tokenSymmetricKey string,
-	originalRefreshToken string,
-	originalAccessToken string,
-) {
-	data, err := io.ReadAll(body)
-	require.NoError(t, err)
+// checkLoginResponse checks login response
+func checkLoginResponse(t *testing.T, username, accessToken, refreshToken string, recorder *httptest.ResponseRecorder) {
+	cookies := recorder.Result().Cookies()
 
-	var loginResponse LoginResponse
-	err = json.Unmarshal(data, &loginResponse)
-
-	require.Equal(t, user.Username, loginResponse.Username)
-
-	accessToken := loginResponse.AccessToken
-	require.NotEmpty(t, accessToken)
-	require.Equal(t, originalAccessToken, accessToken)
-
-	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
-	require.NoError(t, err)
-
-	accessTokenPayload, err := tokenMaker.VerifyToken(accessToken)
-	require.NoError(t, err)
-	require.NotEmpty(t, accessTokenPayload)
-
-	refreshToken := loginResponse.RefreshToken
-	require.NotEmpty(t, refreshToken)
-	require.Equal(t, originalRefreshToken, refreshToken)
-
-	refreshTokenPayload, err := tokenMaker.VerifyToken(refreshToken)
-	require.NoError(t, err)
-	require.NotEmpty(t, refreshTokenPayload)
+	for _, cookie := range cookies {
+		if cookie.Name == "accessToken" {
+			require.Equal(t, accessToken, cookie.Value)
+		} else if cookie.Name == "refreshToken" {
+			require.Equal(t, refreshToken, cookie.Value)
+		} else if cookie.Name == "username" {
+			require.Equal(t, username, cookie.Value)
+		}
+	}
 }
