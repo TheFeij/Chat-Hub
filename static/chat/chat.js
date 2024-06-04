@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // if username cookie is not present, user does not have an access token
     if (username === undefined) {
-        console.log(1111)
         try {
             const response = await fetch('http://localhost:8080/api/refresh', {
                 method: 'POST',
