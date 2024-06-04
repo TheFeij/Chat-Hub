@@ -89,11 +89,14 @@ func GetConfig(configFileName, configFileType, configFilePath string) *Config {
 		panic(fmt.Errorf("unable to read config file: %w", err))
 	}
 	return &Config{
-		databaseAddress:      viper.Get("DATABASE_ADDRESS").(string),
-		testDatabaseAddress:  viper.Get("TEST_DATABASE_ADDRESS").(string),
-		serverAddress:        viper.Get("SERVER_ADDRESS").(string),
-		tokenSymmetricKey:    viper.Get("TOKEN_SYMMETRIC_KEY").(string),
-		accessTokenDuration:  accessTokenDuration,
-		refreshTokenDuration: refreshTokenDuration,
+		databaseAddress:        viper.Get("DATABASE_ADDRESS").(string),
+		testDatabaseAddress:    viper.Get("TEST_DATABASE_ADDRESS").(string),
+		serverAddress:          viper.Get("SERVER_ADDRESS").(string),
+		tokenSymmetricKey:      viper.Get("TOKEN_SYMMETRIC_KEY").(string),
+		accessTokenDuration:    accessTokenDuration,
+		refreshTokenDuration:   refreshTokenDuration,
+		accessTokenCookiePath:  viper.Get("ACCESS_TOKEN_COOKIE_PATH").(string),
+		refreshTokenCookiePath: viper.Get("REFRESH_TOKEN_COOKIE_PATH").(string),
+		usernameCookiePath:     viper.Get("USERNAME_COOKIE_PATH").(string),
 	}
 }
