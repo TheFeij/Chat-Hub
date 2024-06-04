@@ -67,7 +67,7 @@ func (s *server) signup(context *gin.Context) {
 		Expires:  refreshTokenPayload.ExpiredAt,
 		Path:     s.configs.RefreshTokenCookiePath(),
 		HttpOnly: true,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(context.Writer, &http.Cookie{
@@ -76,7 +76,7 @@ func (s *server) signup(context *gin.Context) {
 		Expires:  accessTokenPayload.ExpiredAt,
 		Path:     s.configs.AccessTokenCookiePath(),
 		HttpOnly: true,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(context.Writer, &http.Cookie{
@@ -85,7 +85,7 @@ func (s *server) signup(context *gin.Context) {
 		Expires:  accessTokenPayload.ExpiredAt,
 		Path:     s.configs.UsernameCookiePath(),
 		HttpOnly: false,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 
@@ -139,7 +139,7 @@ func (s *server) login(context *gin.Context) {
 		Expires:  refreshTokenPayload.ExpiredAt,
 		Path:     s.configs.RefreshTokenCookiePath(),
 		HttpOnly: true,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(context.Writer, &http.Cookie{
@@ -148,7 +148,7 @@ func (s *server) login(context *gin.Context) {
 		Expires:  accessTokenPayload.ExpiredAt,
 		Path:     s.configs.AccessTokenCookiePath(),
 		HttpOnly: true,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(context.Writer, &http.Cookie{
@@ -157,7 +157,7 @@ func (s *server) login(context *gin.Context) {
 		Expires:  accessTokenPayload.ExpiredAt,
 		Path:     s.configs.UsernameCookiePath(),
 		HttpOnly: false,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 
@@ -200,7 +200,7 @@ func (s *server) refreshToken(context *gin.Context) {
 		Expires:  newAccessTokenPayload.ExpiredAt,
 		Path:     s.configs.AccessTokenCookiePath(),
 		HttpOnly: true,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 	http.SetCookie(context.Writer, &http.Cookie{
@@ -209,7 +209,7 @@ func (s *server) refreshToken(context *gin.Context) {
 		Expires:  newAccessTokenPayload.ExpiredAt,
 		Path:     s.configs.UsernameCookiePath(),
 		HttpOnly: false,
-		//Secure:   true,
+		Secure:   s.configs.IsProductionEnv(),
 		SameSite: http.SameSiteStrictMode,
 	})
 
