@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const password = form.querySelector('input[name="password"]').value;
 
         try {
-            const response = await fetch('http://localhost:8080/api/signup', {
+            const response = await fetch('https://chat-hub.liara.run/api/signup', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            window.location.href = 'http://localhost:8080/chat';
+            window.location.href = 'https://chat-hub.liara.run/chat';
         } catch (error) {
             console.error('Error:', error);
             alert('An error occurred during signup. Please try again.');
