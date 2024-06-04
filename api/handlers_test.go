@@ -215,8 +215,8 @@ func TestSignup(t *testing.T) {
 			services := mockdb.NewMockRepository(ctrl)
 			tokenMaker := mockmaker.NewMockMaker(ctrl)
 
-			accessToken, accessTokenPayload = createToken(t, randomUser.Username, testConfigs.AccessTokenDuration(), testConfigs.TokenSymmetricKey())
-			refreshToken, refreshTokenPayload = createToken(t, randomUser.Username, testConfigs.RefreshTokenDuration(), testConfigs.TokenSymmetricKey())
+			accessToken, accessTokenPayload = createToken(t, randomUser.Username, testConfigs.AccessTokenDuration())
+			refreshToken, refreshTokenPayload = createToken(t, randomUser.Username, testConfigs.RefreshTokenDuration())
 
 			testCase.buildStubs(services, tokenMaker, testCase.req)
 
@@ -425,8 +425,8 @@ func TestLogin(t *testing.T) {
 			services := mockdb.NewMockRepository(ctrl)
 			tokenMaker := mockmaker.NewMockMaker(ctrl)
 
-			accessToken, accessTokenPayload = createToken(t, randomUser.Username, testConfigs.AccessTokenDuration(), testConfigs.TokenSymmetricKey())
-			refreshToken, refreshTokenPayload = createToken(t, randomUser.Username, testConfigs.RefreshTokenDuration(), testConfigs.TokenSymmetricKey())
+			accessToken, accessTokenPayload = createToken(t, randomUser.Username, testConfigs.AccessTokenDuration())
+			refreshToken, refreshTokenPayload = createToken(t, randomUser.Username, testConfigs.RefreshTokenDuration())
 
 			testCase.buildStubs(services, tokenMaker, testCase.req)
 
@@ -448,6 +448,171 @@ func TestLogin(t *testing.T) {
 
 }
 
+// TestRefresh tests refreshToken route handler
+func TestRefresh(t *testing.T) {
+	randomUser, _ := randomUser(t)
+
+	var refreshToken string
+	var refreshTokenPayload *token.Payload
+
+	var accessToken string
+	var accessTokenPayload *token.Payload
+
+	testCases := []struct {
+		name          string
+		req           *http.Request
+		setupAuth     func(t *testing.T, request *http.Request)
+		buildStubs    func(tokenMaker *mockmaker.MockMaker)
+		checkResponse func(t *testing.T, recorder *httptest.ResponseRecorder)
+	}{
+		{
+			name: "OK",
+			setupAuth: func(t *testing.T, request *http.Request) {
+				refreshToken, refreshTokenPayload = addTokenCookie(
+					t,
+					randomUser.Username,
+					request,
+					"refreshToken",
+					testConfigs.RefreshTokenDuration(),
+					testConfigs.RefreshTokenCookiePath(),
+				)
+			},
+			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
+				tokenMaker.
+					EXPECT().
+					VerifyToken(refreshToken).
+					Times(1).
+					Return(refreshTokenPayload, nil)
+
+				tokenMaker.
+					EXPECT().
+					CreateToken(refreshTokenPayload.Username, testConfigs.AccessTokenDuration()).
+					Times(1).
+					Return(accessToken, accessTokenPayload, nil)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusOK, recorder.Code)
+				checkLoginResponse(t, randomUser.Username, accessToken, refreshToken, recorder)
+			},
+		},
+		{
+			name: "RefreshTokenNotProvided",
+			setupAuth: func(t *testing.T, request *http.Request) {
+			},
+			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "InvalidRefreshToken",
+			setupAuth: func(t *testing.T, request *http.Request) {
+				refreshToken = "invalid token"
+				refreshTokenPayload = nil
+
+				request.AddCookie(&http.Cookie{
+					Name:  "refreshToken",
+					Value: refreshToken,
+				})
+			},
+			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
+				tokenMaker.
+					EXPECT().
+					VerifyToken(refreshToken).
+					Times(1).
+					Return(nil, token.ErrInvalidToken)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "ExpiredRefreshToken",
+			setupAuth: func(t *testing.T, request *http.Request) {
+				refreshToken, refreshTokenPayload = addTokenCookie(
+					t,
+					randomUser.Username,
+					request,
+					"refreshToken",
+					-time.Minute,
+					testConfigs.RefreshTokenCookiePath(),
+				)
+			},
+			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
+				tokenMaker.
+					EXPECT().
+					VerifyToken(refreshToken).
+					Times(1).
+					Return(nil, token.ErrExpiredToken)
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusUnauthorized, recorder.Code)
+			},
+		},
+		{
+			name: "InternalServerError",
+			setupAuth: func(t *testing.T, request *http.Request) {
+				refreshToken, refreshTokenPayload = addTokenCookie(
+					t,
+					randomUser.Username,
+					request,
+					"refreshToken",
+					testConfigs.RefreshTokenDuration(),
+					testConfigs.RefreshTokenCookiePath(),
+				)
+			},
+			buildStubs: func(tokenMaker *mockmaker.MockMaker) {
+				tokenMaker.
+					EXPECT().
+					VerifyToken(refreshToken).
+					Times(1).
+					Return(refreshTokenPayload, nil)
+
+				tokenMaker.
+					EXPECT().
+					CreateToken(refreshTokenPayload.Username, testConfigs.AccessTokenDuration()).
+					Times(1).
+					Return("", &token.Payload{}, errors.New("failed to encode payload to []byte"))
+			},
+			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
+				require.Equal(t, http.StatusInternalServerError, recorder.Code)
+				checkLoginResponse(t, randomUser.Username, accessToken, refreshToken, recorder)
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			controller := gomock.NewController(t)
+			defer controller.Finish()
+
+			tokenMaker := mockmaker.NewMockMaker(controller)
+
+			accessToken, accessTokenPayload = createToken(
+				t,
+				randomUser.Username,
+				testConfigs.AccessTokenDuration(),
+			)
+
+			req, err := http.NewRequest(http.MethodPost, "/api/refresh", nil)
+			require.NoError(t, err)
+
+			testCase.setupAuth(t, req)
+
+			testCase.buildStubs(tokenMaker)
+
+			server := NewTestServer(t, nil, tokenMaker)
+
+			recorder := httptest.NewRecorder()
+			server.router.ServeHTTP(recorder, req)
+
+			// check response
+			testCase.checkResponse(t, recorder)
+		})
+	}
+}
+
 // randomUser creates a random user
 func randomUser(t *testing.T) (*repository.User, string) {
 	password := util.RandomPassword()
@@ -461,8 +626,8 @@ func randomUser(t *testing.T) (*repository.User, string) {
 }
 
 // createToken creates a token and returns it with its payload
-func createToken(t *testing.T, username string, duration time.Duration, tokenSymmetricKey string) (string, *token.Payload) {
-	tokenMaker, err := token.NewPasetoMaker(tokenSymmetricKey)
+func createToken(t *testing.T, username string, duration time.Duration) (string, *token.Payload) {
+	tokenMaker, err := token.NewPasetoMaker(testConfigs.TokenSymmetricKey())
 	require.NoError(t, err)
 
 	accessToken, payload, err := tokenMaker.CreateToken(username, duration)
@@ -470,7 +635,6 @@ func createToken(t *testing.T, username string, duration time.Duration, tokenSym
 	require.NotEmpty(t, accessToken)
 	require.NotEmpty(t, payload)
 
-	require.NoError(t, payload.Valid())
 	require.Equal(t, username, payload.Username)
 	require.WithinDuration(t, time.Now().Add(duration), payload.ExpiredAt, time.Second)
 	require.WithinDuration(t, time.Now(), payload.IssuedAt, time.Second)
@@ -485,10 +649,20 @@ func checkLoginResponse(t *testing.T, username, accessToken, refreshToken string
 	for _, cookie := range cookies {
 		if cookie.Name == "accessToken" {
 			require.Equal(t, accessToken, cookie.Value)
+			require.WithinDuration(t, time.Now().Add(15*time.Minute), cookie.Expires, time.Second)
+			require.True(t, cookie.HttpOnly)
+			require.Equal(t, testConfigs.AccessTokenCookiePath(), cookie.Path)
 		} else if cookie.Name == "refreshToken" {
 			require.Equal(t, refreshToken, cookie.Value)
+			require.WithinDuration(t, time.Now().Add(24*time.Hour), cookie.Expires, time.Second)
+			require.True(t, cookie.HttpOnly)
+			require.Equal(t, testConfigs.RefreshTokenCookiePath(), cookie.Path)
 		} else if cookie.Name == "username" {
 			require.Equal(t, username, cookie.Value)
+			require.WithinDuration(t, time.Now().Add(15*time.Minute), cookie.Expires, time.Second)
+			require.False(t, cookie.HttpOnly)
+			require.Equal(t, testConfigs.UsernameCookiePath(), cookie.Path)
 		}
+		require.Equal(t, http.SameSiteStrictMode, cookie.SameSite)
 	}
 }
