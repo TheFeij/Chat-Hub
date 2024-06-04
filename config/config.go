@@ -8,6 +8,7 @@ import (
 
 // Config holds configuration variables
 type Config struct {
+	isProductionEnv        bool          // if we are in the production environment or not
 	databaseAddress        string        // address of the database
 	testDatabaseAddress    string        // address of the test database
 	serverAddress          string        // address of the server
@@ -17,6 +18,11 @@ type Config struct {
 	accessTokenCookiePath  string        // access token's cookie path
 	refreshTokenCookiePath string        // refresh token's cookie path
 	usernameCookiePath     string        // username's cookie path
+}
+
+// IsProductionEnv returns isProductionEnv config variable
+func (c Config) IsProductionEnv() bool {
+	return c.isProductionEnv
 }
 
 // AccessTokenCookiePath returns the access token cookie path
@@ -89,6 +95,7 @@ func GetConfig(configFileName, configFileType, configFilePath string) *Config {
 		panic(fmt.Errorf("unable to read config file: %w", err))
 	}
 	return &Config{
+		isProductionEnv:        viper.Get("IS_PRODUCTION_ENV").(bool),
 		databaseAddress:        viper.Get("DATABASE_ADDRESS").(string),
 		testDatabaseAddress:    viper.Get("TEST_DATABASE_ADDRESS").(string),
 		serverAddress:          viper.Get("SERVER_ADDRESS").(string),

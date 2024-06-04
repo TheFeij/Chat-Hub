@@ -12,6 +12,7 @@ func TestGetConfig(t *testing.T) {
 	require.NotEmpty(t, conf)
 
 	require.Equal(t, "0.0.0.0:8080", conf.serverAddress)
+	require.Equal(t, false, conf.isProductionEnv)
 	require.Equal(t, "postgresql://root:1234@localhost:5432/chat_server?sslmode=disable", conf.databaseAddress)
 	require.Equal(t, "postgresql://root:1234@localhost:5432/chat_server_test?sslmode=disable", conf.testDatabaseAddress)
 	require.Equal(t, "********************************", conf.tokenSymmetricKey)
