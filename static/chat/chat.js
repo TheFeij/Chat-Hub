@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    const socket = new WebSocket('ws://chat-hub.liara.run/api/chat');
+    const socket = new WebSocket('wss://chat-hub.liara.run/api/chat');
     const chatWindow = document.getElementById('chat-window');
     const messageInput = document.getElementById('message-input');
     const sendButton = document.getElementById('send-button');
