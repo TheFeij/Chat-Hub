@@ -1,7 +1,6 @@
 package ws
 
 import (
-	"Chat-Server/repository"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -137,7 +136,7 @@ func (c *Client) Write() {
 }
 
 // WriteMessages write input messages to the client
-func (c *Client) WriteMessages(messages []*repository.Message) error {
+func (c *Client) WriteMessages(messages []*Message) error {
 	for _, message := range messages {
 		err := c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 		if err != nil {
@@ -149,7 +148,7 @@ func (c *Client) WriteMessages(messages []*repository.Message) error {
 			return err
 		}
 
-		jsonMessage, err := json.Marshal(Message{Author: message.Author, Text: message.Text})
+		jsonMessage, err := json.Marshal(message)
 		if err != nil {
 			continue
 		}
