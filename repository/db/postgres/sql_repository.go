@@ -3,7 +3,7 @@ package postgres
 import (
 	"Chat-Server/repository"
 	"Chat-Server/repository/db/postgres/models"
-	"fmt"
+	"github.com/rs/zerolog/log"
 	driver "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"sync"
@@ -29,7 +29,7 @@ func GetPostgresRepository(address string) *PostgresRepository {
 		// get a db session
 		db, err := gorm.Open(driver.Open(address))
 		if err != nil {
-			panic(fmt.Errorf("cannot connect to database"))
+			log.Fatal().Err(err).Msg("cannot connect to database")
 		}
 
 		// migrate models
