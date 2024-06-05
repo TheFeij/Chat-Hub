@@ -6,24 +6,37 @@ import (
 	"Chat-Server/token"
 	"Chat-Server/util"
 	"errors"
+	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5/pgconn"
 	"gorm.io/gorm"
 	"net/http"
 )
+
+var InternalServerError = fmt.Errorf("something went wrong please try later")
 
 // signup route handler
 func (s *server) signup(context *gin.Context) {
 	var req SignupRequest
 
 	if err := context.ShouldBindJSON(&req); err != nil {
+		var valErrs validator.ValidationErrors
+		if errors.As(err, &valErrs) {
+			for _, valErr := range valErrs {
+				err = fmt.Errorf("invalid %s", valErr.Field())
+				context.JSON(http.StatusBadRequest, errorResponse(err))
+				return
+			}
+		}
+		err = fmt.Errorf("invalid credentials")
 		context.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	hashedPassword, err := util.HashPassword(req.Password)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 	}
 
 	newUser, err := s.repository.AddUser(&repository.User{
@@ -35,11 +48,12 @@ func (s *server) signup(context *gin.Context) {
 		if errors.As(err, &pgError) {
 			switch pgError.ConstraintName {
 			case "users_pkey":
+				err = fmt.Errorf("username already exists")
 				context.JSON(http.StatusForbidden, errorResponse(err))
 				return
 			}
 		}
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 		return
 	}
 
@@ -48,7 +62,7 @@ func (s *server) signup(context *gin.Context) {
 		s.configs.AccessTokenDuration(),
 	)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 		return
 	}
 
@@ -56,7 +70,7 @@ func (s *server) signup(context *gin.Context) {
 		newUser.Username,
 		s.configs.RefreshTokenDuration())
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 		return
 	}
 
@@ -96,6 +110,15 @@ func (s *server) signup(context *gin.Context) {
 func (s *server) login(context *gin.Context) {
 	var req LoginRequest
 	if err := context.ShouldBindJSON(&req); err != nil {
+		var valErrs validator.ValidationErrors
+		if errors.As(err, &valErrs) {
+			for _, valErr := range valErrs {
+				err = fmt.Errorf("invalid %s", valErr.Field())
+				context.JSON(http.StatusBadRequest, errorResponse(err))
+				return
+			}
+		}
+		err = fmt.Errorf("invalid credentials")
 		context.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
@@ -103,14 +126,16 @@ func (s *server) login(context *gin.Context) {
 	user, err := s.repository.GetUser(req.Username)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			err = fmt.Errorf("this username doesn't have an account")
 			context.JSON(http.StatusNotFound, errorResponse(err))
 			return
 		}
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 		return
 	}
 
 	if err := util.CheckPassword(req.Password, user.Password); err != nil {
+		err = fmt.Errorf("wrong passowrd")
 		context.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
@@ -120,7 +145,7 @@ func (s *server) login(context *gin.Context) {
 		s.configs.AccessTokenDuration(),
 	)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 		return
 	}
 
@@ -128,7 +153,7 @@ func (s *server) login(context *gin.Context) {
 		req.Username,
 		s.configs.RefreshTokenDuration())
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 		return
 	}
 
@@ -175,12 +200,19 @@ func errorResponse(err error) gin.H {
 func (s *server) refreshToken(context *gin.Context) {
 	refreshToken, err := context.Cookie("refreshToken")
 	if err != nil {
+		err := fmt.Errorf("no refresh token provided")
 		context.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
 
 	payload, err := s.tokenMaker.VerifyToken(refreshToken)
 	if err != nil {
+		if errors.Is(err, token.ErrExpiredToken) {
+			err = fmt.Errorf("expired refresh token")
+		} else {
+			err = fmt.Errorf("invalid refresh token")
+		}
+
 		context.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
 	}
@@ -190,7 +222,7 @@ func (s *server) refreshToken(context *gin.Context) {
 		s.configs.AccessTokenDuration(),
 	)
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, errorResponse(err))
+		context.JSON(http.StatusInternalServerError, errorResponse(InternalServerError))
 		return
 	}
 
