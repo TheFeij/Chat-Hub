@@ -3,7 +3,7 @@
   "DATABASE_ADDRESS": "postgresql://root:1234@localhost:5432/chat_server?sslmode=disable",
   "TEST_DATABASE_ADDRESS": "postgresql://root:1234@localhost:5432/chat_server_test?sslmode=disable",
   "SERVER_ADDRESS": "0.0.0.0:8080",
-  "TOKEN_SYMMETRIC_KEY": "********************************",
+  "TOKEN_SYMMETRIC_KEY": "e7ce60b2c262e2bcdeab47385f328af9",
   "ACCESS_TOKEN_DURATION": "15m",
   "REFRESH_TOKEN_DURATION": "24h",
   "ACCESS_TOKEN_COOKIE_PATH": "/api/chat",
