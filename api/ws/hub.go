@@ -19,6 +19,9 @@ type Hub struct {
 
 	// Unregister requests from clients.
 	unregister chan *Client
+
+	// Hub messages
+	messages []*Message
 }
 
 // NewHub creates and returns a new hub
@@ -33,17 +36,22 @@ func NewHub() *Hub {
 
 // RunChatHub runs chat hub
 func (h *Hub) RunChatHub(r repository.Repository) {
+	// get all previous messages in the hub from the repository
+	messages, _ := r.GetAllMessages()
+
+	// initialize hub's messages with the size of retrieved messages from repository
+	h.messages = make([]*Message, len(messages))
+
+	// insert messages into hub messages slice
+	for i := 0; i < len(messages); i++ {
+		h.messages[i] = &Message{Author: messages[i].Author, Text: messages[i].Text}
+	}
+
 	for {
 		select {
 		case client := <-h.register:
-			// get all messages in the hub from the repository
-			messages, err := r.GetAllMessages()
-			if err != nil {
-				continue
-			}
-
 			// initialize clients chat page with all previous messages
-			err = client.WriteMessages(messages)
+			err := client.WriteMessages(h.messages)
 			if err != nil {
 				continue
 			}
@@ -60,6 +68,7 @@ func (h *Hub) RunChatHub(r repository.Repository) {
 		case message := <-h.broadcast:
 			// save the message into the repository in a separate go routine
 			go saveMessageToRepository(r, message)
+			h.messages = append(h.messages, &message)
 
 			// broadcast the new message to all the clients
 			broadCastMessage(message, h.clients)
